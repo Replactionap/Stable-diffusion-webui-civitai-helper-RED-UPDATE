@@ -11,11 +11,11 @@ from . import downloader
 SUFFIX = ".civitai"
 
 URLS = {
-    "query": "https://civitai.com/api/v1/models?",
-    "modelPage": "https://civitai.com/models/",
-    "modelId": "https://civitai.com/api/v1/models/",
-    "modelVersionId": "https://civitai.com/api/v1/model-versions/",
-    "hash": "https://civitai.com/api/v1/model-versions/by-hash/"
+    "query": "https://civitai.red/api/v1/models?",
+    "modelPage": "https://civitai.red/models/",
+    "modelId": "https://civitai.red/api/v1/models/",
+    "modelVersionId": "https://civitai.red/api/v1/model-versions/",
+    "hash": "https://civitai.red/api/v1/model-versions/by-hash/"
 }
 
 MODEL_TYPES = {

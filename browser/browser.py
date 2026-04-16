@@ -7,6 +7,7 @@ from string import Template
 import gradio as gr
 from ch_lib import util
 from ch_lib import civitai
+from ch_lib import search_meili
 
 from .supported_models import SUPPORTED_MODELS
 
@@ -77,21 +78,50 @@ def make_ui():
 
         json = civitai.civitai_get(url)
 
-        if not json:
-            return [
-                {},
-                "Civitai did not provide a useable response."
-            ]
+        civitai_models = []
+        next_page = None
 
-        content = parse_civitai_response(json)
+        if json:
+            content = parse_civitai_response(json)
+            civitai_models = content.get("models", [])
+            meta = content.get("meta", {})
+            next_page = meta.get("next_page", None)
 
-        meta = content.get("meta", {})
-        next_page = meta.get("next_page", None)
+            if not next_page in state:
+                state["pages"].append(next_page)
 
-        if not next_page in state:
-            state["pages"].append(next_page)
+        else:
+            util.printD("Civitai REST API did not return usable JSON. Will try Meilisearch only.")
 
-        cards = make_cards(content["models"])
+        # Also try Meilisearch (faster/better search index). We convert Meili hits
+        # into the same parsed-model dict shape so they can be merged.
+        try:
+            meili_models = search_meili.search(search.get("query", ""), base_models=base_models, types=types, limit=20)
+        except Exception as e:
+            util.printD(f"Meili search failed: {e}")
+            meili_models = []
+
+        # Merge results, keep REST API results first, then add Meili results that are unique by id
+        seen = set()
+        combined = []
+        for m in civitai_models:
+            try:
+                seen.add(str(m.get("id")))
+            except Exception:
+                pass
+            combined.append(m)
+
+        for m in meili_models:
+            mid = str(m.get("id"))
+            if mid in seen:
+                continue
+            seen.add(mid)
+            combined.append(m)
+
+        if len(combined) == 0:
+            return [state, "No results from Civitai or Meilisearch."]
+
+        cards = make_cards(combined)
 
         container = quick_template_from_file("container.html")
 
