@@ -842,6 +842,14 @@ def dl_model_by_input(
     api_key = util.get_opts("ch_civiai_api_key")
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
+        try:
+            # avoid printing the full API key; print masked form for debug
+            masked = api_key if len(api_key) <= 8 else f"{api_key[:4]}...{api_key[-4:]}"
+        except Exception:
+            masked = "(set)"
+        util.printD(f"Civitai API key present: {masked}")
+    else:
+        util.printD("Civitai API key not set in options")
 
     additional = None
     for result in download_files(filename, folder, ver_info, headers, filetypes, dl_all, duplicate):

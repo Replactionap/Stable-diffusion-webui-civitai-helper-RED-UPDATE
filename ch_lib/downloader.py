@@ -46,6 +46,18 @@ def request_get(
 
     headers = util.append_default_headers(headers or {})
 
+    # If this looks like a Civitai download URL on the .red domain,
+    # rewrite it to use civitai.com for the actual GET request only.
+    # This avoids changing other civitai API endpoints while allowing
+    # downloads that require the .com domain/session handling.
+    try:
+        if "civitai.red" in url and "/api/download/" in url:
+            new_url = url.replace("civitai.red", "civitai.com")
+            util.printD(f"Rewriting Civitai download URL to .com for request: {new_url}")
+            url = new_url
+    except Exception:
+        pass
+
     try:
         response = requests.get(
             url,
@@ -60,6 +72,21 @@ def request_get(
         output = f"GET Request timed out for {url}"
         print(output)
         return (False, output)
+
+    # DEBUG: print response summary and headers of interest
+    try:
+        util.printD(f"GET {url} -> {response.status_code} {getattr(response, 'url', '')}")
+        util.printD(f"Response header keys: {list(response.headers.keys())}")
+        util.printD(f"Content-Length: {response.headers.get('Content-Length')}")
+        util.printD(f"Transfer-Encoding: {response.headers.get('Transfer-Encoding')}")
+        if response.history:
+            hist_urls = ' -> '.join([h.url for h in response.history])
+            util.printD(f"Redirect history: {hist_urls}")
+        else:
+            util.printD("Redirect history: none")
+    except Exception as _:
+        # Don't fail the request if debug logging hits an unexpected issue
+        util.printD("Failed to log response debug info")
 
     if not response.ok:
         status_code = response.status_code
@@ -358,9 +385,21 @@ def dl_file(
 
         # get file size
         total_size = 0
-        try:
-            total_size = int(response.headers['Content-Length'])
-        except(KeyError):
+        # get file size
+        total_size = 0
+        if 'Content-Length' in response.headers:
+            try:
+                total_size = int(response.headers['Content-Length'])
+            except Exception:
+                util.printD(f"Unable to parse Content-Length header: {response.headers.get('Content-Length')}")
+        else:
+            # provide more debug info when Content-Length is missing
+            util.printD("Content-Length header not present on response")
+            util.printD(f"Response status: {response.status_code}")
+            util.printD(f"Response url: {getattr(response, 'url', '')}")
+            util.printD(f"Transfer-Encoding: {response.headers.get('Transfer-Encoding')}")
+            util.printD(f"Available headers: {list(response.headers.keys())}")
+
             yield (
                 False,
                 f"Could not get file size from Civitai. If Civitai is not having network issues, this can happen if you do not provide an API key in Civitai Helper's settings. Please see https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper/wiki/Civitai-API-Key for more information."
