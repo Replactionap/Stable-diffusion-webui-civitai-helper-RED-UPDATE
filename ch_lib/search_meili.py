@@ -8,11 +8,10 @@ from __future__ import annotations
 import requests
 from . import util
 from . import civitai
+import concurrent.futures
 
 SEARCH_URL = "https://search-new.civitai.com/multi-search"
-# Token from user-provided snippet. If you prefer, you can store this in
-# options and read via util.get_opts("ch_meili_token").
-SEARCH_TOKEN = "8c46eb2508e21db1e9828a97968d91ab1ca1caa5f70a00e88a2ba1e286603b61"
+SEARCH_TOKEN = "8c46eb2508e21db1e9828a97968d91ab1ca1caa5f70a00e88a2ba1e286603b61" # Public meili_search token
 
 HEADERS = {
     "Authorization": f"Bearer {SEARCH_TOKEN}",
@@ -106,7 +105,6 @@ def search(query: str, base_models: list | None = None, types: list | None = Non
             filters.append(f"type = {t}")
     if base_models:
         for bm in base_models:
-            # meili indexes base model under version.baseModel
             filters.append(f"version.baseModel = {bm}")
 
     payload = {
@@ -149,27 +147,35 @@ def search(query: str, base_models: list | None = None, types: list | None = Non
             util.printD(f"Failed to convert meili hit: {e}")
             continue
 
-    # For parsed hits that lack preview images, try to fetch model info from
-    # the Civitai REST API to obtain images/versions. This gives better
-    # thumbnails similar to what parse_model() does for REST results.
     nsfw_preview_threshold = util.get_opts("ch_nsfw_threshold")
     max_size_preview = util.get_opts("ch_max_size_preview")
 
+    ids_to_enrich = []
+    models_by_id = {}
     for m in parsed:
+        if m.get("preview", {}).get("url"):
+            continue
+        model_id = m.get("id")
+        if not model_id:
+            continue
+        ids_to_enrich.append(str(model_id))
+        models_by_id[str(model_id)] = m
+
+    if not ids_to_enrich:
+        return parsed
+
+    enrich_limit = int(util.get_opts("ch_meili_enrich_limit") or 20)
+    ids_to_fetch = ids_to_enrich[:enrich_limit]
+    max_workers = int(util.get_opts("ch_meili_workers") or 5)
+
+    def _enrich_item(item):
+        mid, m = item
         try:
-            if m.get("preview", {}).get("url"):
-                continue
-
-            model_id = m.get("id")
-            if not model_id:
-                continue
-
-            util.printD(f"Meili: fetching model info for id {model_id} to get preview")
-            model_info = civitai.get_model_info_by_id(str(model_id))
+            util.printD(f"Meili: fetching model info for id {mid} to get preview")
+            model_info = civitai.get_model_info_by_id(str(mid))
             if not model_info:
-                continue
+                return
 
-            # Extract previews from modelVersions
             model_versions = model_info.get("modelVersions", [])
             previews = []
             for version in model_versions:
@@ -185,7 +191,6 @@ def search(query: str, base_models: list | None = None, types: list | None = Non
                 if vid:
                     m.setdefault("versions", {})[vid] = version.get("baseModel")
 
-            # Pick first allowed preview respecting NSFW threshold
             for img in previews:
                 if img.get("type") != "image":
                     continue
@@ -198,14 +203,16 @@ def search(query: str, base_models: list | None = None, types: list | None = Non
                 except Exception:
                     pass
 
-                # use civitai helper to construct sized url
                 url = civitai.get_image_url(img, max_size_preview)
                 if url:
                     m["preview"] = {"type": "image", "url": url}
                     break
 
         except Exception as e:
-            util.printD(f"Failed to enrich meili model {m.get('id')}: {e}")
-            continue
+            util.printD(f"Failed to enrich meili model {mid}: {e}")
+
+    items = [(mid, models_by_id[mid]) for mid in ids_to_fetch]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        list(executor.map(_enrich_item, items))
 
     return parsed

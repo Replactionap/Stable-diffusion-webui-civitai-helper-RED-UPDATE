@@ -76,6 +76,8 @@ def make_ui():
 
         util.printD(f"Loading data from API request: {url}")
 
+        # IMPT: Since red update request api doesn't response preview images in 'com request without nsfw=true' and some results loss.
+
         json = civitai.civitai_get(url)
 
         civitai_models = []
