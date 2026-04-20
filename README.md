@@ -1,11 +1,9 @@
-### I would like to retire from maintaining this project. As much as I've enjoyed working on this, I have lost interest as of late and no longer use Stable Diffusion WebUI. If anyone would like to take over, please feel free to fork this project.
+##  stable-diffusion-webui-civitai-helper-RED-UPDATE
 
-**[Contributors](https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper/graphs/contributors)**
+Fork of one of the most convenient interfaces for viewing and downloading models. The developers have abandoned their repositories, so I'm taking over the development myself. From current improvements:
 
-### Language
-[中文(ChatGPT)](README.cn.md)
-[日本語(ChatGPT)](README.jp.md)
-[한국어(ChatGPT)](README.kr.md)
+- Meilisearch (Originally Civitai Browser Search) With Import Results! 
+- GUI Gradio Improvements!
 
 ## About Civitai Helper
 This extension provides the ability to download models and model metadata from Civitai. Data such as activation keywords, model description, version information, and model previews for models hosted on Civitai can be at your fingertips without having to navigate away from stable diffusion webui.
@@ -30,13 +28,16 @@ Civitai: ![Civitai Url](https://civitai.com/models/16768/civitai-helper-sd-webui
 * Checking all your local models for new versions from Civitai
 * Download a new version directly into SD model folder (with info and preview)
 * Modified Built-in "Extra Network" cards, to add the following buttons on each card:
+
   - 🖼️: Modified "replace preview" text into this icon
   - 🌐: Open this model's Civitai url in a new tab
   - 💡: Add this model's trigger words to prompt
   - ✏️: Rename model
   - ❌: Remove/Delete model
+
 * Option to always show additional buttons, to help with touchscreens.
 * To the best of my knowledge, this extension should still work in versions of webui prior to v1.5.0, but it is not tested. I make best-effort attempts to write code that *should* maintain compatibility with older versions, but if you have run into problems, please file an issue and I'll attempt to resolve it.
+
 * **New feature**: Automatically add metadata of model resources used to all generated images. Useful for uploading to Civitai. More information below.
 
 # Install
@@ -47,16 +48,7 @@ Alternatively, download this project as a zip file, and unzip it to `Your SD web
 
 Everytime you install or update this extension, you need to shutdown SD Webui and Relaunch it. Just "Reload UI" won't work for this extension.
 
-Some functionality from Civitai, like downloading models, requires having an account and adding your API key. See this ![Wiki Article](https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper/wiki/Civitai-API-Key) for more information.
-
 Done.
-
-## Branches
-Development of this extension happens in three development branches:
-* **`master`**: The current version of the extension intended for end users. Out-of-version changes to this branch only exist to hotfix critical issues found after the release of a new version.
-* **`dev`**: The active development version of this extension. This will always have the most up-to-date changes but is also the most likely to contain bugs.
-* **`v1.6ONLY`**: Not supported and not really intended for anybody except for me. Slowest to update and less tested than other branches, this branch only runs on the latest version of webui. Compatibility code for older versions is actively removed, and whether I'm running it on webui stable or webui dev is in flux. In theory, this is the most optimized version of the extension, but it's often just me chasing waterfalls. Do not submit issues if you use this branch. They will be marked as invalid, closed, and otherwise ignored.
-* **`Feature Branches`**: These are branches separated from the main development branches to add new features. They are likely to be in a state of active development and incomplete.
 
 ## Update Your SD Webui
 This extension need to get extra network's cards id. Which is added since **2023-02-06**.
@@ -80,7 +72,7 @@ For each model, it will create two files to save all model info from Civitai. Th
 If a model info file already exists, by default it will be skipped. If a model cannot be found in Civitai, a minimal model info file will be created with any information that can be extracted from the model. By default, a model with model pre-existing model info files will not be scanned.
 
 ### Adding New Models
-When you want to grab some new models, you can either download them to the appropriate directory yourself or you can use the built-in model [downloader](https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper#download). If you use the Model Downloader, the model information and preview will also be downloaded, along providing the option to download other files, like the model config or VAE.
+When you want to grab some new models, you can either download them to the appropriate directory yourself or you can use the built-in model. If you use the Model Downloader, the model information and preview will also be downloaded, along providing the option to download other files, like the model config or VAE.
 
 If you just want to download the models into the appropriate directories yourself, you can simply run a scan again to get new model's information and preview images, although other files like the model config or VAE may be missing. Only new models will be scanned with default options.
 
@@ -204,8 +196,7 @@ While many options are provided in the Civitai Helper's extension tab, a dedicat
 The next couple sections explain some of the more advanced option.
 
 ### API Key
-Some models on Civitai require you to be logged in to download them. Unfortunately, it is not currently possible to just enter in your login information with this extension, but with an API Key, you will still be able to download these models. For information on how to generate an API Key for your Civitai account, please see our **[wiki](https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper/wiki/Civitai-API-Key)**.
-
+Some models on Civitai require you to be logged in to download them. Unfortunately, it is not currently possible to just enter in your login information with this extension, but with an API Key, you will still be able to download these models. For information on how to generate an API Key for your Civitai account.
 ### Proxy
 You may set a proxy for the extension to use and then all requests to civitai will use the proxy.
 
@@ -253,19 +244,6 @@ Sometimes Civitai can be down or refuse your API connection. Civitai has a conne
 
 In those cases, the only thing you can do is just wait a while then try again. I suggest making a cup of tea!
 
-### Get Wrong model info and preview images from civitai
-A bad news is, some models are saved with a wrong sha256 in civitai's database. Check here for more detail:
-[https://github.com/civitai/civitai/issues/426](https://github.com/civitai/civitai/issues/426)
-
-So, for those models, this extension can not get the right model info or preview images.
-
-In this case, you have to remove the model info file and get the right model info by a civitai url on this extension's tab page.
-
-Also, you can report those models with wrong sha256 to civitai at following page:
-[https://discord.com/channels/1037799583784370196/1096271712959615100/1096271712959615100](https://discord.com/channels/1037799583784370196/1096271712959615100/1096271712959615100)
-
-Please report that model to civitai, so they can fix it.
-
 ### Scanning fail when using colab
 First of, search your error message with google. Most likely, it will be a colab issue.
 
@@ -274,5 +252,3 @@ If you are sure it is a out of memory issue when scanning models, and you are us
 Since v1.5.5, we've already optimized the SHA256 function to the top. So the only 2 choices for you are:
 * try again
 * or use a pro account of colab.
-
-### [Changes](https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper/blob/master/CHANGELOG.md)
