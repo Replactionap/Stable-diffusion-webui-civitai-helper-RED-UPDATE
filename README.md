@@ -1,8 +1,8 @@
-## 🌟 stable-diffusion-webui-civitai-helper-RED-UPDATE
+## 🌟 Stable-diffusion-webui-civitai-helper-RED-UPDATE
 
 Fork of one of the most convenient interfaces for viewing and downloading models. The developers have abandoned their repositories, so I'm taking over the development myself. From current improvements:
 
-- Meilisearch (Originally Civitai Browser Search) With Import Results! 
+- Meilisearch (Originally Civitai Browser Search) With Improvements Results! 
 - GUI Gradio Improvements!
 
 ## About Civitai Helper
